@@ -1,27 +1,71 @@
-# AI Character Companion (VS Code Extension)
+# ai-character-companion README
 
-VS Code 上で 3D アバター (VRM) と対話できる拡張機能プロジェクトです。
-GitHub Copilot Chat と連携し、React ベースの UI 上でアバターが音声応答を行うマルチモーダルインターフェースを提供します。
+This is the README for your extension "ai-character-companion". After writing up a brief description, we recommend including the following sections.
 
-## 概要
+## Features
 
-このプロジェクトは、以下の技術を統合して、よりインタラクティブなコーディング体験を実現することを目指しています。
+Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-- **GitHub Copilot Chat 連携**: `@character_name` としてチャットに参加し、LLM による応答を生成します。
-- **3D アバター表示**: VRM 形式のアバターを React Three Fiber を使用して Webview 上にレンダリングします。
-- **音声合成とリップシンク**: アバターが応答内容を音声で読み上げ、口の動き (リップシンク) を同期させます。
-- **React ベースの UI**: VS Code の Webview UI Toolkit を活用したモダンなユーザーインターフェース。
+For example if there is an image subfolder under your extension project workspace:
 
-## 開発計画
+\!\[feature X\]\(images/feature-x.png\)
 
-詳細は `docs/INITIAL_DEVELOPMENT_PLAN.md` を参照してください。現在は以下のフェーズに分けて開発を進めています。
+> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
-1. **基盤構築**: Extension Host と Webview (React) 間の通信確立。
-2. **Copilot 連携**: Chat Participant API を使用した対話ロジックの実装。
-3. **アバター表示**: Three.js / React Three Fiber による VRM アバターの描画。
-4. **音声・リップシンク**: 音声合成とアバターの口パク同期の実装。
-5. **設定・カスタマイズ**: ユーザー設定によるアバター変更等の機能追加。
+## Requirements
 
-## ライセンス
+If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
-[MIT License](LICENSE)
+## Extension Settings
+
+Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+
+For example:
+
+This extension contributes the following settings:
+
+* `myExtension.enable`: Enable/disable this extension.
+* `myExtension.thing`: Set to `blah` to do something.
+
+## Known Issues
+
+Calling out known issues can help limit users opening duplicate issues against your extension.
+
+## Release Notes
+
+Users appreciate release notes as you update your extension.
+
+### 1.0.0
+
+Initial release of ...
+
+### 1.0.1
+
+Fixed issue #.
+
+### 1.1.0
+
+Added features X, Y, and Z.
+
+---
+
+## Following extension guidelines
+
+Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+
+* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+
+## Working with Markdown
+
+You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+
+* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
+* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
+* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+
+## For more information
+
+* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
+* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+
+**Enjoy!**
