@@ -7,10 +7,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { FromWebviewMessage, ToWebviewMessage } from "../shared/types";
+import { VoiceController } from "./modules/VoiceController";
 import { AvatarScene } from "./components/AvatarScene";
 
 // Acquire VS Code API (must be called once)
 const vscode = acquireVsCodeApi();
+
+const voice = new VoiceController();
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -52,6 +55,8 @@ class ErrorBoundary extends React.Component<
 const App = () => {
   const [lastMessage, setLastMessage] =
     React.useState<string>("No messages yet");
+  const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
+  const [audioEnabled, setAudioEnabled] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -59,6 +64,13 @@ const App = () => {
       switch (message.type) {
         case "SPEAK":
           setLastMessage(`Received SPEAK: ${message.text}`);
+          if (audioEnabled) {
+            setIsSpeaking(true);
+            voice.speak(message.text, undefined, () => {
+              setIsSpeaking(false);
+              vscode.postMessage({ type: "SPEECH_END" });
+            });
+          }
           break;
         case "UPDATE_PROFILE":
           setLastMessage(`Updated Profile: ${message.profile.name}`);
@@ -71,15 +83,22 @@ const App = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [audioEnabled]);
 
   const sendReady = () => {
     vscode.postMessage({ type: "READY" } as FromWebviewMessage);
   };
 
+  const enableAudio = () => {
+    setAudioEnabled(true);
+    // "Resume" audio context if we were using Web Audio API
+    // For SpeechSynthesis, this user interaction implicitly blesses subsequent calls.
+    voice.speak("Audio enabled.");
+  };
+
   return (
     <ErrorBoundary>
-      <AvatarScene />
+      <AvatarScene isSpeaking={isSpeaking} />
       <div
         style={{
           padding: "10px",
@@ -88,11 +107,19 @@ const App = () => {
           left: 0,
           color: "white",
           textShadow: "1px 1px 2px black",
+          pointerEvents: "none",
         }}
       >
         <h1>Avatar Companion</h1>
         <p>Status: {lastMessage}</p>
-        <button onClick={sendReady}>Send READY Signal</button>
+        <div style={{ pointerEvents: "auto" }}>
+          <button onClick={sendReady}>Send READY Signal</button>
+          {!audioEnabled && (
+            <button onClick={enableAudio} style={{ marginLeft: 10 }}>
+              Enable Audio
+            </button>
+          )}
+        </div>
       </div>
     </ErrorBoundary>
   );

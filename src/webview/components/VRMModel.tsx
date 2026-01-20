@@ -13,7 +13,11 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 const DEFAULT_VRM_URL =
   "https://pixiv.github.io/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm";
 
-export const VRMModel: React.FC = () => {
+interface VRMModelProps {
+  isSpeaking?: boolean;
+}
+
+export const VRMModel: React.FC<VRMModelProps> = ({ isSpeaking }) => {
   const gltf = useLoader(GLTFLoader, DEFAULT_VRM_URL, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
@@ -33,6 +37,13 @@ export const VRMModel: React.FC = () => {
   useFrame((state, delta) => {
     if (vrm) {
       vrm.update(delta);
+
+      // Simple Lip Sync
+      if (vrm.expressionManager) {
+        const s = Math.sin(state.clock.elapsedTime * 20);
+        const value = isSpeaking ? Math.max(0, s) : 0;
+        vrm.expressionManager.setValue("aa", value);
+      }
     }
   });
 

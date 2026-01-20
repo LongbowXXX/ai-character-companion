@@ -9,7 +9,9 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import { VRMModel } from "./VRMModel";
 
-export const AvatarScene: React.FC = () => {
+export const AvatarScene: React.FC<{ isSpeaking?: boolean }> = ({
+  isSpeaking = false,
+}) => {
   return (
     <div
       style={{
@@ -34,7 +36,7 @@ export const AvatarScene: React.FC = () => {
             </mesh>
           }
         >
-          <VRMModel />
+          <VRMModel isSpeaking={isSpeaking} />
         </React.Suspense>
 
         <OrbitControls target={[0, 1.3, 0]} />
