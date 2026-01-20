@@ -26,6 +26,14 @@
         "command": "ai-character-companion.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "chatParticipants": [
+      {
+        "id": "ai-character-companion.avatar",
+        "name": "avatar",
+        "description": "Chat with your AI Character",
+        "isSticky": true
+      }
     ]
   },
   "scripts": {

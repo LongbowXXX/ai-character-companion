@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 LongbowXXX
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 export type ToWebviewMessage =
   | { type: "SPEAK"; text: string }
   | { type: "UPDATE_PROFILE"; profile: UserProfile }

@@ -1,5 +1,12 @@
+/*
+ * Copyright (c) 2026 LongbowXXX
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import * as vscode from "vscode";
 import { FromWebviewMessage, ToWebviewMessage } from "../shared/types";
+import { activateChatParticipant } from "./chat/participant";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -15,6 +22,9 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
+  // Activate Chat Participant
+  activateChatParticipant(context, provider);
+
   const disposable = vscode.commands.registerCommand(
     "ai-character-companion.helloWorld",
     () => {
@@ -28,8 +38,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
-class AvatarWebviewProvider implements vscode.WebviewViewProvider {
+export class AvatarWebviewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "ai-character-companion.avatarView";
+  private _view?: vscode.WebviewView;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -38,6 +49,7 @@ class AvatarWebviewProvider implements vscode.WebviewViewProvider {
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ) {
+    this._view = webviewView;
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, "dist")],
@@ -51,10 +63,10 @@ class AvatarWebviewProvider implements vscode.WebviewViewProvider {
         case "READY":
           vscode.window.showInformationMessage("Avatar View is Ready!");
           // Send a test message back
-          webviewView.webview.postMessage({
+          this.postMessageToWebview({
             type: "SPEAK",
             text: "Hello from Extension Host!",
-          } as ToWebviewMessage);
+          });
           break;
         case "SPEECH_END":
           console.log("Speech ended");
@@ -64,6 +76,12 @@ class AvatarWebviewProvider implements vscode.WebviewViewProvider {
           break;
       }
     });
+  }
+
+  public postMessageToWebview(message: ToWebviewMessage) {
+    if (this._view) {
+      this._view.webview.postMessage(message);
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
