@@ -57,6 +57,7 @@ const App = () => {
     React.useState<string>("No messages yet");
   const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
   const [audioEnabled, setAudioEnabled] = React.useState<boolean>(false);
+  const [vrmUrl, setVrmUrl] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -77,6 +78,9 @@ const App = () => {
           break;
         case "LOAD_VRM":
           setLastMessage(`Loading VRM: ${message.uri}`);
+          if (message.uri && message.uri !== "") {
+            setVrmUrl(message.uri);
+          }
           break;
       }
     };
@@ -98,7 +102,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <AvatarScene isSpeaking={isSpeaking} />
+      <AvatarScene isSpeaking={isSpeaking} vrmUrl={vrmUrl} />
       <div
         style={{
           padding: "10px",

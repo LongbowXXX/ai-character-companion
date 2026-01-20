@@ -15,16 +15,20 @@ const DEFAULT_VRM_URL =
 
 interface VRMModelProps {
   isSpeaking?: boolean;
+  url?: string;
 }
 
-export const VRMModel: React.FC<VRMModelProps> = ({ isSpeaking }) => {
-  const gltf = useLoader(GLTFLoader, DEFAULT_VRM_URL, (loader) => {
+export const VRMModel: React.FC<VRMModelProps> = ({ isSpeaking, url }) => {
+  const vrmUrl = url && url !== "" ? url : DEFAULT_VRM_URL;
+
+  const gltf = useLoader(GLTFLoader, vrmUrl, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
 
   const [vrm, setVrm] = React.useState<any>(null);
 
   React.useEffect(() => {
+    // Reset VRM state when URL changes (though useLoader handles caching/reloading)
     if (gltf.userData.vrm) {
       const vrmInstance = gltf.userData.vrm;
       VRMUtils.removeUnnecessaryVertices(gltf.scene);

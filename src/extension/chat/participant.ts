@@ -20,8 +20,10 @@ export function activateChatParticipant(
     token: vscode.CancellationToken,
   ) => {
     // System prompt to define personality
+    const config = vscode.workspace.getConfiguration("ai-character-companion");
     const systemPrompt =
-      "You are a helpful AI assistant avatar. Respond in a friendly manner.";
+      config.get<string>("systemPrompt") ||
+      "You are a helpful AI assistant avatar.";
 
     const messages = [
       vscode.LanguageModelChatMessage.User(systemPrompt),

@@ -33,6 +33,17 @@ export function activate(context: vscode.ExtensionContext) {
       );
     },
   );
+  // Listen for config changes
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (
+        e.affectsConfiguration("ai-character-companion.vrmPath") ||
+        e.affectsConfiguration("ai-character-companion.systemPrompt")
+      ) {
+        provider.updateWebviewState();
+      }
+    }),
+  );
   context.subscriptions.push(disposable);
 }
 
@@ -52,21 +63,24 @@ export class AvatarWebviewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, "dist")],
+      localResourceRoots: [
+        vscode.Uri.joinPath(this._extensionUri, "dist"),
+        // Allow access to any local file if the user picks one
+        vscode.Uri.file("/"),
+      ],
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+    // Initial Load
+    this._updateWebviewStateInternal(webviewView.webview);
 
     // Handle messages from the Webview
     webviewView.webview.onDidReceiveMessage((message: FromWebviewMessage) => {
       switch (message.type) {
         case "READY":
           vscode.window.showInformationMessage("Avatar View is Ready!");
-          // Send a test message back
-          this.postMessageToWebview({
-            type: "SPEAK",
-            text: "Hello from Extension Host!",
-          });
+          this._updateWebviewStateInternal(webviewView.webview);
           break;
         case "SPEECH_END":
           console.log("Speech ended");
@@ -75,6 +89,56 @@ export class AvatarWebviewProvider implements vscode.WebviewViewProvider {
           vscode.window.showErrorMessage(`Webview Error: ${message.message}`);
           break;
       }
+    });
+
+    // Listen for config changes
+    // Moved to activate() because we need ExtensionContext
+  }
+
+  public updateWebviewState() {
+    if (this._view) {
+      this._updateWebviewStateInternal(this._view.webview);
+    }
+  }
+
+  private _updateWebviewStateInternal(webview: vscode.Webview) {
+    const config = vscode.workspace.getConfiguration("ai-character-companion");
+    const vrmPath = config.get<string>("vrmPath");
+
+    let finalUri = "";
+    if (vrmPath && vrmPath.trim() !== "") {
+      // Basic validation
+      if (
+        !vrmPath.toLowerCase().endsWith(".vrm") &&
+        !vrmPath.toLowerCase().endsWith(".glb")
+      ) {
+        vscode.window.showWarningMessage(
+          "Invalid VRM Path: Must end with .vrm or .glb",
+        );
+      } else {
+        try {
+          const fileUri = vscode.Uri.file(vrmPath);
+
+          // Allow access to the VRM file's directory
+          if (this._view) {
+            const distUri = vscode.Uri.joinPath(this._extensionUri, "dist");
+            const vrmDir = vscode.Uri.joinPath(fileUri, "..");
+            this._view.webview.options = {
+              enableScripts: true,
+              localResourceRoots: [distUri, vrmDir],
+            };
+          }
+
+          finalUri = webview.asWebviewUri(fileUri).toString();
+        } catch (e) {
+          console.error("Failed to convert VRM path", e);
+        }
+      }
+    }
+
+    this.postMessageToWebview({
+      type: "LOAD_VRM",
+      uri: finalUri,
     });
   }
 
