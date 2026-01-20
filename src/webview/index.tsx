@@ -7,9 +7,47 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { FromWebviewMessage, ToWebviewMessage } from "../shared/types";
+import { AvatarScene } from "./components/AvatarScene";
 
 // Acquire VS Code API (must be called once)
 const vscode = acquireVsCodeApi();
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+    // Send error to Extension Host
+    vscode.postMessage({
+      type: "ERROR",
+      message: error.message,
+    } as FromWebviewMessage);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: "red", backgroundColor: "white" }}>
+          <h2>Something went wrong.</h2>
+          <pre>{this.state.error?.toString()}</pre>
+          <pre>{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const App = () => {
   const [lastMessage, setLastMessage] =
@@ -40,11 +78,23 @@ const App = () => {
   };
 
   return (
-    <div style={{ padding: "10px" }}>
-      <h1>Avatar Companion</h1>
-      <p>Status: {lastMessage}</p>
-      <button onClick={sendReady}>Send READY Signal</button>
-    </div>
+    <ErrorBoundary>
+      <AvatarScene />
+      <div
+        style={{
+          padding: "10px",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          color: "white",
+          textShadow: "1px 1px 2px black",
+        }}
+      >
+        <h1>Avatar Companion</h1>
+        <p>Status: {lastMessage}</p>
+        <button onClick={sendReady}>Send READY Signal</button>
+      </div>
+    </ErrorBoundary>
   );
 };
 

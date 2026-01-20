@@ -94,9 +94,13 @@ export class AvatarWebviewProvider implements vscode.WebviewViewProvider {
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} https: blob: data:; connect-src ${webview.cspSource} https: blob: data:;">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<title>Avatar Companion</title>
+                <style>
+                    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; }
+                    #root { width: 100%; height: 100%; }
+                </style>
 			</head>
 			<body>
 				<div id="root"></div>
