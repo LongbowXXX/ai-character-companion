@@ -17,7 +17,8 @@
         {
           "type": "webview",
           "id": "ai-character-companion.avatarView",
-          "name": "Avatar Companion"
+          "name": "Avatar Companion",
+          "icon": "media/icon.svg"
         }
       ]
     },
