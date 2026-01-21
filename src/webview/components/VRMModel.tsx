@@ -14,6 +14,7 @@ import {
 } from "@pixiv/three-vrm-animation";
 import { AnimationMixer } from "three";
 import { useVRMAnimation } from "../hooks/useVRMAnimation";
+import { useVRMBlink } from "../hooks/useVRMBlink";
 
 // Using a public sample VRM for testing (Stable GitHub Pages URL)
 const DEFAULT_VRM_URL =
@@ -75,6 +76,16 @@ export const VRMModel: React.FC<VRMModelProps> = ({
 
   // Use procedural animation ONLY if no mixer (no VRMA playing)
   useVRMAnimation(mixer ? null : vrm);
+
+  // Custom Hook for Blinking
+  useVRMBlink(vrm);
+
+  // Set default expression on load
+  React.useEffect(() => {
+    if (vrm && vrm.expressionManager) {
+      vrm.expressionManager.setValue("neutral", 1.0);
+    }
+  }, [vrm]);
 
   useFrame((state, delta) => {
     if (mixer) {
