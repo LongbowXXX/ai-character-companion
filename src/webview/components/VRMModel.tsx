@@ -7,7 +7,13 @@
 import * as React from "react";
 import { useLoader, useFrame } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+import { VRMLoaderPlugin, VRMUtils, VRM } from "@pixiv/three-vrm";
+import {
+  createVRMAnimationClip,
+  VRMAnimationLoaderPlugin,
+} from "@pixiv/three-vrm-animation";
+import { AnimationMixer } from "three";
+import { useVRMAnimation } from "../hooks/useVRMAnimation";
 
 // Using a public sample VRM for testing (Stable GitHub Pages URL)
 const DEFAULT_VRM_URL =
@@ -16,29 +22,74 @@ const DEFAULT_VRM_URL =
 interface VRMModelProps {
   isSpeaking?: boolean;
   url?: string;
+  vrmaUrl?: string;
 }
 
-export const VRMModel: React.FC<VRMModelProps> = ({ isSpeaking, url }) => {
+export const VRMModel: React.FC<VRMModelProps> = ({
+  isSpeaking,
+  url,
+  vrmaUrl,
+}) => {
   const vrmUrl = url && url !== "" ? url : DEFAULT_VRM_URL;
 
   const gltf = useLoader(GLTFLoader, vrmUrl, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
 
-  const [vrm, setVrm] = React.useState<any>(null);
+  const [vrm, setVrm] = React.useState<VRM | null>(null);
+  const [mixer, setMixer] = React.useState<AnimationMixer | null>(null);
 
   React.useEffect(() => {
-    // Reset VRM state when URL changes (though useLoader handles caching/reloading)
     if (gltf.userData.vrm) {
       const vrmInstance = gltf.userData.vrm;
       VRMUtils.removeUnnecessaryVertices(gltf.scene);
       VRMUtils.combineSkeletons(gltf.scene);
-      // vrmInstance.scene.rotation.y = Math.PI; // Face forward
       setVrm(vrmInstance);
     }
   }, [gltf]);
 
+  React.useEffect(() => {
+    console.log("VRMModel: checking vrm and vrmaUrl", { vrm: !!vrm, vrmaUrl });
+    if (vrm && vrmaUrl) {
+      console.log("VRMModel: Loading VRMA from", vrmaUrl);
+      const loader = new GLTFLoader();
+      loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
+      loader.load(
+        vrmaUrl,
+        (gltfVrma) => {
+          const vrmAnimations = gltfVrma.userData.vrmAnimations;
+          console.log("VRMModel: Loaded VRMA", { animations: vrmAnimations });
+          if (vrmAnimations && vrmAnimations.length > 0) {
+            console.log("VRMModel: Playing clip");
+            const clip = createVRMAnimationClip(vrmAnimations[0], vrm);
+            const newMixer = new AnimationMixer(vrm.scene);
+            newMixer.clipAction(clip).play();
+            setMixer(newMixer);
+          } else {
+            console.warn("VRMModel: No animations found in VRMA");
+          }
+        },
+        (progress) =>
+          console.log(
+            "VRMModel: Loading progress",
+            progress.loaded / progress.total,
+          ),
+        (error) => {
+          console.error("Failed to load VRMA:", error);
+        },
+      );
+    } else {
+      setMixer(null);
+    }
+  }, [vrm, vrmaUrl]);
+
+  // Use procedural animation ONLY if no mixer (no VRMA playing)
+  useVRMAnimation(mixer ? null : vrm);
+
   useFrame((state, delta) => {
+    if (mixer) {
+      mixer.update(delta);
+    }
     if (vrm) {
       vrm.update(delta);
 

@@ -7,7 +7,7 @@
 export type ToWebviewMessage =
   | { type: "SPEAK"; text: string }
   | { type: "UPDATE_PROFILE"; profile: UserProfile }
-  | { type: "LOAD_VRM"; uri: string };
+  | { type: "LOAD_VRM"; uri: string; vrmaUri?: string };
 
 export type FromWebviewMessage =
   | { type: "READY" }

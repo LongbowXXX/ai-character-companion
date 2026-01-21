@@ -12,7 +12,8 @@ import { VRMModel } from "./VRMModel";
 export const AvatarScene: React.FC<{
   isSpeaking?: boolean;
   vrmUrl?: string;
-}> = ({ isSpeaking = false, vrmUrl }) => {
+  vrmaUrl?: string;
+}> = ({ isSpeaking = false, vrmUrl, vrmaUrl }) => {
   return (
     <div
       style={{
@@ -37,7 +38,7 @@ export const AvatarScene: React.FC<{
             </mesh>
           }
         >
-          <VRMModel isSpeaking={isSpeaking} url={vrmUrl} />
+          <VRMModel isSpeaking={isSpeaking} url={vrmUrl} vrmaUrl={vrmaUrl} />
         </React.Suspense>
 
         <OrbitControls target={[0, 1.3, 0]} />

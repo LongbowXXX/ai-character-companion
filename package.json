@@ -45,6 +45,12 @@
           "description": "Path to your local .vrm file. Leave empty to use the default sample avatar.",
           "scope": "resource"
         },
+        "ai-character-companion.vrmaPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to your local .vrma file for idle animation. Leave empty to use default procedural animation.",
+          "scope": "resource"
+        },
         "ai-character-companion.systemPrompt": {
           "type": "string",
           "default": "You are a helpful AI assistant character.",
@@ -85,6 +91,7 @@
   },
   "dependencies": {
     "@pixiv/three-vrm": "^3.4.5",
+    "@pixiv/three-vrm-animation": "^3.4.5",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "react": "^19.2.3",

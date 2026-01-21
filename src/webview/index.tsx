@@ -58,6 +58,7 @@ const App = () => {
   const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
   const [audioEnabled, setAudioEnabled] = React.useState<boolean>(false);
   const [vrmUrl, setVrmUrl] = React.useState<string | undefined>(undefined);
+  const [vrmaUrl, setVrmaUrl] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -77,15 +78,27 @@ const App = () => {
           setLastMessage(`Updated Profile: ${message.profile.name}`);
           break;
         case "LOAD_VRM":
+          console.log(
+            "Webview: Received LOAD_VRM Payload:",
+            JSON.stringify(message),
+          );
           setLastMessage(`Loading VRM: ${message.uri}`);
           if (message.uri && message.uri !== "") {
             setVrmUrl(message.uri);
+          }
+          if (message.vrmaUri) {
+            console.log("Webview Setting VRMA URI", message.vrmaUri);
+            setVrmaUrl(message.vrmaUri);
           }
           break;
       }
     };
 
     window.addEventListener("message", handleMessage);
+
+    // Auto-send READY signal to request initial state
+    vscode.postMessage({ type: "READY" } as FromWebviewMessage);
+
     return () => window.removeEventListener("message", handleMessage);
   }, [audioEnabled]);
 
@@ -102,7 +115,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <AvatarScene isSpeaking={isSpeaking} vrmUrl={vrmUrl} />
+      <AvatarScene isSpeaking={isSpeaking} vrmUrl={vrmUrl} vrmaUrl={vrmaUrl} />
       <div
         style={{
           padding: "10px",
