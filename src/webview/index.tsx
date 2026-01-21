@@ -78,16 +78,11 @@ const App = () => {
           setLastMessage(`Updated Profile: ${message.profile.name}`);
           break;
         case "LOAD_VRM":
-          console.log(
-            "Webview: Received LOAD_VRM Payload:",
-            JSON.stringify(message),
-          );
           setLastMessage(`Loading VRM: ${message.uri}`);
           if (message.uri && message.uri !== "") {
             setVrmUrl(message.uri);
           }
           if (message.vrmaUri) {
-            console.log("Webview Setting VRMA URI", message.vrmaUri);
             setVrmaUrl(message.vrmaUri);
           }
           break;

@@ -49,31 +49,21 @@ export const VRMModel: React.FC<VRMModelProps> = ({
   }, [gltf]);
 
   React.useEffect(() => {
-    console.log("VRMModel: checking vrm and vrmaUrl", { vrm: !!vrm, vrmaUrl });
     if (vrm && vrmaUrl) {
-      console.log("VRMModel: Loading VRMA from", vrmaUrl);
       const loader = new GLTFLoader();
       loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
       loader.load(
         vrmaUrl,
         (gltfVrma) => {
           const vrmAnimations = gltfVrma.userData.vrmAnimations;
-          console.log("VRMModel: Loaded VRMA", { animations: vrmAnimations });
           if (vrmAnimations && vrmAnimations.length > 0) {
-            console.log("VRMModel: Playing clip");
             const clip = createVRMAnimationClip(vrmAnimations[0], vrm);
             const newMixer = new AnimationMixer(vrm.scene);
             newMixer.clipAction(clip).play();
             setMixer(newMixer);
-          } else {
-            console.warn("VRMModel: No animations found in VRMA");
           }
         },
-        (progress) =>
-          console.log(
-            "VRMModel: Loading progress",
-            progress.loaded / progress.total,
-          ),
+        undefined,
         (error) => {
           console.error("Failed to load VRMA:", error);
         },

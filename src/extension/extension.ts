@@ -140,42 +140,20 @@ export class AvatarWebviewProvider implements vscode.WebviewViewProvider {
 
     // Handle VRMA Path
     let finalVrmaUri = "";
-    console.log("Extension: Reading VRMA Path from Config:", vrmaPath);
 
     if (vrmaPath && vrmaPath.trim() !== "") {
       if (!vrmaPath.toLowerCase().endsWith(".vrma")) {
-        console.warn("Extension: Invalid VRMA extension");
         vscode.window.showWarningMessage(
           "Invalid VRMA Path: Must end with .vrma",
         );
       } else {
         try {
           const vrmaFileUri = vscode.Uri.file(vrmaPath);
-          console.log("Extension: Resolved VRMA URI:", vrmaFileUri.toString());
-          if (this._view) {
-            const vrmaDir = vscode.Uri.joinPath(vrmaFileUri, "..");
-            // Add to localResourceRoots (merging with existing)
-            // FIXME: Updating options triggers a reload, causing an infinite loop with the READY message.
-            /*
-            const currentRoots =
-              this._view.webview.options.localResourceRoots || [];
-            this._view.webview.options = {
-              ...this._view.webview.options,
-              localResourceRoots: [...currentRoots, vrmaDir],
-            };
-            */
-            console.log(
-              "Extension: Skipped updating localResourceRoots to prevent reload loop.",
-            );
-          }
           finalVrmaUri = webview.asWebviewUri(vrmaFileUri).toString();
-          console.log("Extension: Generated Webview URI:", finalVrmaUri);
         } catch (e) {
           console.error("Extension: Failed to process VRMA path", e);
         }
       }
-    } else {
-      console.log("Extension: VRMA Path is empty or undefined");
     }
 
     this.postMessageToWebview({
