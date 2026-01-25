@@ -7,6 +7,7 @@
 import * as vscode from "vscode";
 import { FromWebviewMessage, ToWebviewMessage } from "../shared/types";
 import { activateChatParticipant } from "./chat/participant";
+import { registerAvatarTools } from "./tools/avatar_tools";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -24,6 +25,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Activate Chat Participant
   activateChatParticipant(context, provider);
+
+  // Register LM Tools
+  registerAvatarTools(context, provider);
 
   const disposable = vscode.commands.registerCommand(
     "ai-character-companion.helloWorld",

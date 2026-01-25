@@ -13,7 +13,8 @@ export const AvatarScene: React.FC<{
   isSpeaking?: boolean;
   vrmUrl?: string;
   vrmaUrl?: string;
-}> = ({ isSpeaking = false, vrmUrl, vrmaUrl }) => {
+  expression?: string;
+}> = ({ isSpeaking = false, vrmUrl, vrmaUrl, expression }) => {
   return (
     <div
       style={{
@@ -38,7 +39,12 @@ export const AvatarScene: React.FC<{
             </mesh>
           }
         >
-          <VRMModel isSpeaking={isSpeaking} url={vrmUrl} vrmaUrl={vrmaUrl} />
+          <VRMModel
+            isSpeaking={isSpeaking}
+            url={vrmUrl}
+            vrmaUrl={vrmaUrl}
+            expression={expression}
+          />
         </React.Suspense>
 
         <OrbitControls target={[0, 1.3, 0]} />

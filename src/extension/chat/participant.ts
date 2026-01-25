@@ -5,9 +5,15 @@
  */
 
 import * as vscode from "vscode";
-import { AvatarWebviewProvider } from "../extension"; // Will need to export this from extension.ts or move it
+import { AvatarWebviewProvider } from "../extension";
 
 const PARTICIPANT_ID = "ai-character-companion.avatar";
+
+interface IChatResult extends vscode.ChatResult {
+  metadata: {
+    command: string;
+  };
+}
 
 export function activateChatParticipant(
   context: vscode.ExtensionContext,
@@ -18,60 +24,151 @@ export function activateChatParticipant(
     context: vscode.ChatContext,
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken,
-  ) => {
-    // System prompt to define personality
+  ): Promise<IChatResult | undefined> => {
+    // 1. Define Tools
+    const tools: vscode.LanguageModelChatTool[] = [
+      {
+        name: "speak",
+        description:
+          "Speak to the user with a specific emotional expression and text. Use this to reply to the user.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            text: {
+              type: "string",
+              description: "The text content to speak.",
+            },
+            expression: {
+              type: "string",
+              description:
+                "The facial expression/emotion to use. Valid values: neutral, happy, angry, sad, relaxed, surprised.",
+              enum: [
+                "neutral",
+                "happy",
+                "angry",
+                "sad",
+                "relaxed",
+                "surprised",
+              ],
+            },
+          },
+          required: ["text"],
+        },
+      },
+      {
+        name: "get_character_settings",
+        description:
+          "Retrieve the character's system prompt (personality) and other settings.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+    ];
+
+    // 2. Prepare Messages
     const config = vscode.workspace.getConfiguration("ai-character-companion");
     const systemPrompt =
       config.get<string>("systemPrompt") ||
       "You are a helpful AI assistant avatar.";
 
-    const messages = [
-      vscode.LanguageModelChatMessage.User(systemPrompt),
+    const messages: vscode.LanguageModelChatMessage[] = [
+      vscode.LanguageModelChatMessage.User(
+        `System Prompt: ${systemPrompt}\n\nYou are an avatar. You can speak to the user using the 'speak' tool. Always use the 'speak' tool to reply, unless you are just thinking.`,
+      ),
       vscode.LanguageModelChatMessage.User(request.prompt),
     ];
 
-    try {
-      // Send request to Copilot (GPT-4)
-      const chatResponse = await request.model.sendRequest(messages, {}, token);
-
-      let accumulatedText = "";
-
-      for await (const fragment of chatResponse.text) {
-        // Stream text to the Code Chat UI
-        stream.markdown(fragment);
-
-        accumulatedText += fragment;
-
-        // Simple sentence detection (improve this later)
-        if (
-          fragment.includes(".") ||
-          fragment.includes("!") ||
-          fragment.includes("?") ||
-          fragment.includes("\n")
-        ) {
-          // Send chunk to Webview for speech/animation
-          // We send the *incremental* chunk if we were sophisticated,
-          // but for now let's just send the whole sentence logic in the future.
-          // For this step, let's just verify streaming works.
-        }
+    // 3. Tool Use Loop
+    const maxIterations = 5;
+    for (let i = 0; i < maxIterations; i++) {
+      if (token.isCancellationRequested) {
+        break;
       }
 
-      // After stream ends, send the full text (or remaining text) to Webview
-      // In a real app, we'd queue sentences.
-      webviewProvider.postMessageToWebview({
-        type: "SPEAK",
-        text: accumulatedText,
-      });
-    } catch (err) {
-      stream.markdown("Error communicating with Copilot.");
-      console.error(err);
+      try {
+        const chatResponse = await request.model.sendRequest(
+          messages,
+          { tools },
+          token,
+        );
+
+        const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+
+        for await (const part of chatResponse.stream) {
+          if (part instanceof vscode.LanguageModelTextPart) {
+            stream.markdown(part.value);
+          } else if (part instanceof vscode.LanguageModelToolCallPart) {
+            toolCalls.push(part);
+          }
+        }
+
+        if (toolCalls.length === 0) {
+          // No tools called, we are done
+          break;
+        }
+
+        // Handle Tool Calls
+        for (const toolCall of toolCalls) {
+          // Add the tool call to history
+          messages.push(
+            vscode.LanguageModelChatMessage.Assistant([
+              new vscode.LanguageModelToolCallPart(
+                toolCall.callId,
+                toolCall.name,
+                toolCall.input,
+              ),
+            ]),
+          );
+
+          let result: any = "Tool not found or failed";
+
+          if (toolCall.name === "get_character_settings") {
+            result = {
+              systemPrompt: systemPrompt,
+              validExpressions: [
+                "neutral",
+                "happy",
+                "angry",
+                "sad",
+                "relaxed",
+                "surprised",
+              ],
+            };
+          } else if (toolCall.name === "speak") {
+            const args = toolCall.input as {
+              text: string;
+              expression?: string;
+            };
+            webviewProvider.postMessageToWebview({
+              type: "SPEAK",
+              text: args.text,
+              expression: args.expression,
+            });
+            result = { status: "success", message: "Message sent to avatar." };
+          }
+
+          // Add Tool Result
+          messages.push(
+            vscode.LanguageModelChatMessage.User([
+              new vscode.LanguageModelToolResultPart(toolCall.callId, result),
+            ]),
+          );
+        }
+        // Loop triggers again to let the model react to the tool result or stop.
+      } catch (err) {
+        console.error("Error in chat loop:", err);
+        stream.markdown("\n\n*Error communicating with Copilot.*");
+        break;
+      }
     }
+
+    return { metadata: { command: "" } };
   };
 
   const participant = vscode.chat.createChatParticipant(
     PARTICIPANT_ID,
     handler,
   );
-  // participant.iconPath = ... // Icon setup
   context.subscriptions.push(participant);
 }

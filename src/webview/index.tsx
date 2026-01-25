@@ -59,6 +59,9 @@ const App = () => {
   const [audioEnabled, setAudioEnabled] = React.useState<boolean>(false);
   const [vrmUrl, setVrmUrl] = React.useState<string | undefined>(undefined);
   const [vrmaUrl, setVrmaUrl] = React.useState<string | undefined>(undefined);
+  const [expression, setExpression] = React.useState<string | undefined>(
+    undefined,
+  );
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -66,10 +69,15 @@ const App = () => {
       switch (message.type) {
         case "SPEAK":
           setLastMessage(`Received SPEAK: ${message.text}`);
+          if (message.expression) {
+            setExpression(message.expression);
+          }
           if (audioEnabled) {
             setIsSpeaking(true);
             voice.speak(message.text, undefined, () => {
               setIsSpeaking(false);
+              // reset expression after speaking? Optional.
+              // setExpression("neutral");
               vscode.postMessage({ type: "SPEECH_END" });
             });
           }
@@ -110,7 +118,12 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <AvatarScene isSpeaking={isSpeaking} vrmUrl={vrmUrl} vrmaUrl={vrmaUrl} />
+      <AvatarScene
+        isSpeaking={isSpeaking}
+        vrmUrl={vrmUrl}
+        vrmaUrl={vrmaUrl}
+        expression={expression}
+      />
       <div
         style={{
           padding: "10px",

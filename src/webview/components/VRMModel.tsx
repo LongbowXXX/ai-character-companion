@@ -24,12 +24,14 @@ interface VRMModelProps {
   isSpeaking?: boolean;
   url?: string;
   vrmaUrl?: string;
+  expression?: string;
 }
 
 export const VRMModel: React.FC<VRMModelProps> = ({
   isSpeaking,
   url,
   vrmaUrl,
+  expression,
 }) => {
   const vrmUrl = url && url !== "" ? url : DEFAULT_VRM_URL;
 
@@ -86,6 +88,30 @@ export const VRMModel: React.FC<VRMModelProps> = ({
       vrm.expressionManager.setValue("neutral", 1.0);
     }
   }, [vrm]);
+
+  // Handle Expression Changes
+  React.useEffect(() => {
+    if (vrm && vrm.expressionManager && expression) {
+      // Very basic reset: set common expressions to 0
+      // Ideally we would track the previous one or iterate all.
+      // For now, let's assume standard presets.
+      const presets = [
+        "happy",
+        "angry",
+        "sad",
+        "relaxed",
+        "surprised",
+        "neutral",
+      ];
+      presets.forEach((name) => vrm.expressionManager!.setValue(name, 0));
+
+      try {
+        vrm.expressionManager.setValue(expression, 1.0);
+      } catch (e) {
+        console.warn(`Failed to set expression: ${expression}`, e);
+      }
+    }
+  }, [vrm, expression]);
 
   useFrame((state, delta) => {
     if (mixer) {
