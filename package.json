@@ -58,7 +58,53 @@
           "editPresentation": "multilineText"
         }
       }
-    }
+    },
+    "languageModelTools": [
+      {
+        "name": "ai-character-companion_speak",
+        "displayName": "Speak as Avatar",
+        "toolReferenceName": "speakAsAvatar",
+        "modelDescription": "Speak to the user with a specific emotional expression and text. Use this to reply to the user.",
+        "userDescription": "Make the avatar speak with the given text and expression.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text content to speak."
+            },
+            "expression": {
+              "type": "string",
+              "description": "The facial expression/emotion to use. Valid values: neutral, happy, angry, sad, relaxed, surprised.",
+              "enum": [
+                "neutral",
+                "happy",
+                "angry",
+                "sad",
+                "relaxed",
+                "surprised"
+              ]
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      },
+      {
+        "name": "ai-character-companion_get_character_settings",
+        "displayName": "Get Avatar Settings",
+        "toolReferenceName": "getCharacterSettings",
+        "modelDescription": "Retrieve the character's system prompt (personality) and other settings.",
+        "userDescription": "Get the avatar's current settings.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
