@@ -137,3 +137,15 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Knowledge folder (symlink)
+knowledge/
+
+# Copilot skills (symlink)
+.copilot/skills
+
+# Copilot prompts (symlink)
+.copilot/prompts
+
+# Copilot agents (symlink)
+.copilot/agents
