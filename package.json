@@ -1,0 +1,155 @@
+{
+  "name": "ai-character-companion",
+  "displayName": "AI Character Companion",
+  "description": "AI Character Companion for VS Code Extension.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.104.0",
+    "node": ">=20.0.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "ai-character-companion.avatarView",
+          "name": "Avatar Companion",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ai-character-companion.helloWorld",
+        "title": "Hello World"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "ai-character-companion.avatar",
+        "name": "avatar",
+        "description": "Chat with your AI Character",
+        "isSticky": true
+      }
+    ],
+    "configuration": {
+      "title": "Avatar Companion",
+      "properties": {
+        "ai-character-companion.vrmPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to your local .vrm file. Leave empty to use the default sample avatar.",
+          "scope": "resource"
+        },
+        "ai-character-companion.vrmaPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to your local .vrma file for idle animation. Leave empty to use default procedural animation.",
+          "scope": "resource"
+        },
+        "ai-character-companion.systemPrompt": {
+          "type": "string",
+          "default": "You are a helpful AI assistant character.",
+          "description": "The personality and instructions for the AI character.",
+          "editPresentation": "multilineText"
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "ai-character-companion_speak",
+        "displayName": "Speak as Avatar",
+        "toolReferenceName": "speakAsAvatar",
+        "modelDescription": "Speak to the user with a specific emotional expression and text. Use this to reply to the user.",
+        "userDescription": "Make the avatar speak with the given text and expression.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text content to speak."
+            },
+            "expression": {
+              "type": "string",
+              "description": "The facial expression/emotion to use. Valid values: neutral, happy, angry, sad, relaxed, surprised.",
+              "enum": [
+                "neutral",
+                "happy",
+                "angry",
+                "sad",
+                "relaxed",
+                "surprised"
+              ]
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      },
+      {
+        "name": "ai-character-companion_get_character_settings",
+        "displayName": "Get Avatar Settings",
+        "toolReferenceName": "getCharacterSettings",
+        "modelDescription": "Retrieve the character's system prompt (personality) and other settings.",
+        "userDescription": "Get the avatar's current settings.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "setup": "node scripts/setup-links.js",
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.172.0",
+    "@types/vscode": "^1.108.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.4.5",
+    "@pixiv/three-vrm-animation": "^3.4.5",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.172.0"
+  },
+  "overrides": {
+    "mocha": {
+      "diff": "^8.0.2",
+      "serialize-javascript": "^7.0.5"
+    }
+  }
+}

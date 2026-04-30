@@ -1,0 +1,157 @@
+/*
+ * Copyright (c) 2026 LongbowXXX
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import * as React from "react";
+import * as ReactDOM from "react-dom/client";
+import { FromWebviewMessage, ToWebviewMessage } from "../shared/types";
+import { VoiceController } from "./modules/VoiceController";
+import { AvatarScene } from "./components/AvatarScene";
+
+// Acquire VS Code API (must be called once)
+const vscode = acquireVsCodeApi();
+
+const voice = new VoiceController();
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+    // Send error to Extension Host
+    vscode.postMessage({
+      type: "ERROR",
+      message: error.message,
+    } as FromWebviewMessage);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: "red", backgroundColor: "white" }}>
+          <h2>Something went wrong.</h2>
+          <pre>{this.state.error?.toString()}</pre>
+          <pre>{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const App = () => {
+  const [lastMessage, setLastMessage] =
+    React.useState<string>("No messages yet");
+  const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
+  const [audioEnabled, setAudioEnabled] = React.useState<boolean>(false);
+  const [vrmUrl, setVrmUrl] = React.useState<string | undefined>(undefined);
+  const [vrmaUrl, setVrmaUrl] = React.useState<string | undefined>(undefined);
+  const [expression, setExpression] = React.useState<string | undefined>(
+    undefined,
+  );
+
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const message = event.data as ToWebviewMessage;
+      switch (message.type) {
+        case "SPEAK":
+          setLastMessage(`Received SPEAK: ${message.text}`);
+          if (message.expression) {
+            setExpression(message.expression);
+          }
+          if (audioEnabled) {
+            setIsSpeaking(true);
+            voice.speak(message.text, undefined, () => {
+              setIsSpeaking(false);
+              // reset expression after speaking? Optional.
+              // setExpression("neutral");
+              vscode.postMessage({ type: "SPEECH_END" });
+            });
+          }
+          break;
+        case "UPDATE_PROFILE":
+          setLastMessage(`Updated Profile: ${message.profile.name}`);
+          break;
+        case "LOAD_VRM":
+          setLastMessage(`Loading VRM: ${message.uri}`);
+          if (message.uri && message.uri !== "") {
+            setVrmUrl(message.uri);
+          }
+          if (message.vrmaUri) {
+            setVrmaUrl(message.vrmaUri);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // Auto-send READY signal to request initial state
+    vscode.postMessage({ type: "READY" } as FromWebviewMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, [audioEnabled]);
+
+  const sendReady = () => {
+    vscode.postMessage({ type: "READY" } as FromWebviewMessage);
+  };
+
+  const enableAudio = () => {
+    setAudioEnabled(true);
+    // "Resume" audio context if we were using Web Audio API
+    // For SpeechSynthesis, this user interaction implicitly blesses subsequent calls.
+    voice.speak("Audio enabled.");
+  };
+
+  return (
+    <ErrorBoundary>
+      <AvatarScene
+        isSpeaking={isSpeaking}
+        vrmUrl={vrmUrl}
+        vrmaUrl={vrmaUrl}
+        expression={expression}
+      />
+      <div
+        style={{
+          padding: "10px",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          color: "white",
+          textShadow: "1px 1px 2px black",
+          pointerEvents: "none",
+        }}
+      >
+        <h1>Avatar Companion</h1>
+        <p>Status: {lastMessage}</p>
+        <div style={{ pointerEvents: "auto" }}>
+          <button onClick={sendReady}>Send READY Signal</button>
+          {!audioEnabled && (
+            <button onClick={enableAudio} style={{ marginLeft: 10 }}>
+              Enable Audio
+            </button>
+          )}
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+};
+
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<App />);
+}
