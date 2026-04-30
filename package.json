@@ -4,7 +4,8 @@
   "description": "AI Character Companion for VS Code Extension.",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.104.0"
+    "vscode": "^1.104.0",
+    "node": ">=20.0.0"
   },
   "categories": [
     "Other"
@@ -128,7 +129,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.172.0",
     "@types/vscode": "^1.108.1",
-    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
@@ -144,5 +145,11 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "three": "^0.172.0"
+  },
+  "overrides": {
+    "mocha": {
+      "diff": "^8.0.2",
+      "serialize-javascript": "^7.0.5"
+    }
   }
 }

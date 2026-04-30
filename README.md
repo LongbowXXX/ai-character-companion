@@ -4,7 +4,7 @@ A VS Code extension that integrates GitHub Copilot Chat with an interactive 3D a
 
 ## Features
 
-- **Copilot Chat Integration**: Interact with AI characters using `@character_name` mentions in VS Code's chat interface
+- **Copilot Chat Integration**: Interact with the avatar using `@avatar` mentions in VS Code's chat interface
 - **3D VRM Avatar**: Display animated 3D avatars using the VRM format, supporting expressions and lip-sync
 - **Voice Response**: Text-to-speech synthesis with real-time lip synchronization
 - **React-based UI**: Modern, responsive interface built with React and React Three Fiber
@@ -12,15 +12,16 @@ A VS Code extension that integrates GitHub Copilot Chat with an interactive 3D a
 
 ## Requirements
 
-- Visual Studio Code 1.96.0 or higher
+- Visual Studio Code 1.104.0 or higher
 - GitHub Copilot subscription (for Chat Participant functionality)
-- Node.js 18.x or higher (for development)
+- Node.js 20.x or higher (for development)
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
 - `ai-character-companion.vrmPath`: Path to your local .vrm file for the avatar model
+- `ai-character-companion.vrmaPath`: Path to your local .vrma file for idle animation
 - `ai-character-companion.systemPrompt`: Personality profile of the character (supports multiline text)
 
 ## Architecture
@@ -39,8 +40,7 @@ Communication between these environments is handled through VS Code's message pa
 - **Extension Host**: TypeScript, VS Code Extension API
 - **Webview UI**: React, React Three Fiber
 - **3D Rendering**: Three.js, @pixiv/three-vrm
-- **Build Tool**: esbuild / Webpack
-- **UI Components**: Webview UI Toolkit for VS Code
+- **Build Tool**: esbuild
 
 ## Development
 
@@ -48,7 +48,8 @@ Communication between these environments is handled through VS Code's message pa
 
 1. Clone the repository
 2. Run `npm install` to install dependencies
-3. Open the project in VS Code
+3. (Optional) Run `npm run setup` to create junction links to the `externals/terraformer` content used by the repo
+4. Open the project in VS Code
 
 ### Building
 
@@ -63,8 +64,8 @@ npm run compile
 ### Running
 
 1. Press `F5` to open a new VS Code window with the extension loaded
-2. Open the Command Palette and look for extension commands
-3. Use `@character_name` in Copilot Chat to interact with the avatar
+2. Ensure the **Avatar Companion** view is visible in the Explorer sidebar
+3. Use `@avatar` in Copilot Chat to interact with the avatar
 
 ### Project Structure
 
@@ -73,14 +74,17 @@ src/
 ├── extension/        # Extension Host (Node.js)
 │   ├── extension.ts  # Entry point
 │   ├── chat/         # Copilot Chat Participant
-│   └── utilities/
+│   └── tools/         # Language Model tools
 ├── webview/          # Webview (React)
 │   ├── index.tsx     # React entry point
 │   ├── components/   # UI components
-│   ├── avatar/       # Three.js/VRM logic
-│   └── style/
+│   └── modules/       # Voice / animation helpers
 └── shared/           # Shared type definitions
     └── types.ts      # IPC message protocols
+
+dist/
+├── extension.js       # Extension Host bundle (CJS)
+└── webview.js         # Webview bundle (IIFE)
 ```
 
 ## Development Phases
